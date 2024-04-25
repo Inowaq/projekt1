@@ -6,8 +6,15 @@ using UnityEngine.SceneManagement;
 public class BirdController : MonoBehaviour
 {
     public float JumpForce;
+    public float MaxVelocityY;
     public Rigidbody2D rb2D;
     public GameObject gameOverScreen;
+    public Animator animator;
+    public AudioSource audioSource;
+
+    public AudioClip jumpSound;
+    public AudioClip ScoreSound;
+    public AudioClip HitSound;
 
     public int Points;
     public static bool GameOver;
@@ -37,9 +44,18 @@ public class BirdController : MonoBehaviour
                 HasStarted = true;
                 rb2D.gravityScale = 1f;
             }
-            
+
+            audioSource.clip = jumpSound;
+            audioSource.Play();
+
+            animator.SetTrigger("FlapWings");
+
+            rb2D.velocity = Vector2.zero;
             rb2D.AddForce(new Vector2(0, JumpForce), ForceMode2D.Impulse);   
         }
+
+        if (rb2D.velocity.y > MaxVelocityY)
+            rb2D.velocity = new Vector2(0, MaxVelocityY);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -47,12 +63,22 @@ public class BirdController : MonoBehaviour
         Debug.Log("Die!");
         GameOver = true;
         gameOverScreen.SetActive(true);
+
+        audioSource.clip = HitSound;
+        audioSource.Play();
+
+        if (Points > PlayerPrefs.GetInt("Highscore"))
+        {
+            PlayerPrefs.SetInt("Highscore", Points);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(collision.CompareTag("PointZone"))
         {
+            audioSource.clip = ScoreSound;
+            audioSource.Play();
             Points++;
         }
     }
